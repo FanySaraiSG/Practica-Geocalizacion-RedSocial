@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Localizador SChimalhuacán</title>
+    <style>
+    
+        body { font-family: 'Segoe UI', sans-serif; background-color: #fcecec; display: flex; justify-content: center; padding: 40px; margin: 0; }
+        
+        .main-container { display: flex; width: 1150px; gap: 20px; }
+
+        .card { background: white; border-radius: 15px; border-top: 6px solid #b71c1c; box-shadow: 0 4px 15px rgba(0,0,0,0.1); padding: 25px; }
+        .card-left { flex: 2; } 
+        .card-right { flex: 1; text-align: center; }
+
+        h2 { color: #b71c1c; margin-top: 0; font-size: 20px; text-transform: uppercase; }
+        label { display: block; font-weight: bold; color: #555; margin: 10px 0 5px 5px; font-size: 13px; text-align: left; }
+
+        /* Estilo de los menús desplegables */
+        select { width: 100%; padding: 12px; border: 2px solid #b71c1c; border-radius: 8px; font-size: 15px; margin-bottom: 10px; cursor: pointer; background: white; }
+        
+        /* Panel de Coordenadas  */
+        .coord-display { background-color: #d32f2f; color: white; padding: 15px; border-radius: 10px; margin: 15px 0; text-align: center; }
+        .coord-display b { color: #ffeb3b; font-size: 19px; }
+
+        /* Botón de Google Maps */
+        .btn-nav {
+            display: none; background: #ffeb3b; color: #b71c1c; border: none; padding: 8px 18px;
+            border-radius: 20px; font-weight: bold; cursor: pointer; margin-top: 10px;
+            text-decoration: none; font-size: 13px;
+        }
+
+        /* Marcos de contenido */
+        #map-frame { width: 100%; height: 400px; border-radius: 10px; border: 1px solid #ddd; }
+        #fb-container { width: 100%; min-height: 500px; }
+    </style>
+</head>
+<body>
+
+<div class="main-container">
+    <div class="card card-left">
+        <h2 id="main-title">📍 Localizador</h2>
+        
+        <label>🍽️ SELECCIONA UN RESTAURANTE:</label>
+        <select id="sel-rest" onchange="updateView(this, 'sel-cult')">
+            <option value="" disabled selected>-- Elige donde comer --</option>
+            <option value="19.4104,-98.9277" data-fb="LaCasaDeTono" data-n="La Casa de Toño" data-icon="🍴">La Casa de Toño</option>
+            <option value="19.4240,-98.9705" data-fb="ElCantoDeLaRana" data-n="El Canto de la Rana" data-icon="🍴">El Canto de la Rana</option>
+            <option value="19.4226,-98.9318" data-fb="CerveceriaLupulo" data-n="Cervecería Lúpulo" data-icon="🍺">Cervecería Lúpulo</option>
+            <option value="19.4143,-98.9363" data-fb="ComoDiosMandaOficial" data-n="Como Dios Manda" data-icon="🍴">Terraza Como Dios Manda</option>
+        </select>
+
+        <label>🎭 SELECCIONA CULTURA O PARQUE:</label>
+        <select id="sel-cult" onchange="updateView(this, 'sel-rest')">
+            <option value="" disabled selected>-- Elige un sitio de interés --</option>
+            <option value="19.4325,-98.9375" data-fb="Planetario.chimalhuacan.2022" data-n="Planetario Digital" data-icon="🚀">Planetario Digital</option>
+            <option value="19.4124,-98.9443" data-fb="TeatroAcolmixtli" data-n="Teatro Acolmixtli" data-icon="🎭">Teatro Acolmixtli</option>
+            <option value="19.4341,-98.9365" data-fb="AviarioMunicipalEhecatl" data-n="Aviario Ehécatl" data-icon="🦜">Aviario Municipal Ehécatl</option>
+            <option value="19.4072,-98.9482" data-fb="GobiernoDeChimalhuacan" data-n="Guerrero Chimalli" data-icon="🛡️">Estatua Guerrero Chimalli</option>
+        </select>
+
+        <div class="coord-display">
+            COORDENADAS: <b id="coords-text">---, ---</b><br>
+            <span id="name-text">Selecciona un lugar de arriba</span><br>
+            <a id="btn-maps" class="btn-nav" target="_blank">🗺️ VER EN GOOGLE MAPS</a>
+        </div>
+
+        <iframe id="map-frame" src="about:blank"></iframe>
+    </div>
+
+    <div class="card card-right">
+        <h2>📱 Redes Sociales</h2>
+        <div id="fb-container">
+             <p style="color: #999; margin-top: 150px; font-style: italic;">si el lugar cuenta con red social aparecera aqui.</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    /**
+     * @param {HTMLElement} currentSelect - El menú que acabas de tocar.
+     * @param {string} otherId - El ID del menú que debemos resetear.
+     */
+    function updateView(currentSelect, otherId) {
+        const opt = currentSelect.options[currentSelect.selectedIndex];
+        const coords = currentSelect.value;
+        const name = opt.getAttribute('data-n');
+        const fbID = opt.getAttribute('data-fb');
+        const icon = opt.getAttribute('data-icon');
+
+        // 1. Limpiar el otro menú para que no parezca que hay dos cosas seleccionadas
+        document.getElementById(otherId).selectedIndex = 0;
+
+        // 2. Actualizar Textos y Título
+        document.getElementById('coords-text').innerText = coords;
+        document.getElementById('name-text').innerText = name;
+        document.getElementById('main-title').innerText = `${icon} ${name}`;
+
+        // 3. Para activar y configurar botón de navegación
+        const btnMaps = document.getElementById('btn-maps');
+        btnMaps.style.display = "inline-block";
+        btnMaps.href = `https://www.google.com/maps/dir/?api=1&destination=${coords}`;
+
+        // 4. Actualizar Mapa (Usando modo embed sin API key )
+        document.getElementById('map-frame').src = `https://maps.google.com/maps?q=${coords}&t=&z=17&ie=UTF8&iwloc=&output=embed`;
+
+        // 5. Actualizar Facebook
+        document.getElementById('fb-container').innerHTML = `
+            <iframe src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2F${fbID}&tabs=timeline&width=340&height=500&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=true" 
+            width="100%" height="500" style="border:none;overflow:hidden" scrolling="no" frameborder="0" allowfullscreen="true"></iframe>`;
+    }
+</script>
+
+</body>
+</html>
